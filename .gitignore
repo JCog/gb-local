@@ -1,0 +1,7 @@
+.gradle/
+.gitignore
+.idea/
+build/
+out/
+settings.ini
+sub_points.txt
