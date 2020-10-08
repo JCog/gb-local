@@ -59,26 +59,20 @@ public class TwitchApi {
     }
     
     public List<Follow> getFollowers(String userId) throws HystrixRuntimeException {
-        FollowList followList = twitchClient.getHelix().getFollowers(
-                Settings.getTwitchChannelAuthToken(),
-                null,
-                userId,
-                null,
-                100
-        ).execute();
+        String cursor = null;
+        List<Follow> followsOutput = new ArrayList<>();
         
-        List<Follow> followsOutput = new ArrayList<>(followList.getFollows());
-        
-        while (!followList.getFollows().isEmpty()) {
-            followList = twitchClient.getHelix().getFollowers(
+        do {
+            FollowList followList = twitchClient.getHelix().getFollowers(
                     Settings.getTwitchChannelAuthToken(),
                     null,
                     userId,
-                    followList.getPagination().getCursor(),
+                    cursor,
                     100
             ).execute();
+            cursor = followList.getPagination().getCursor();
             followsOutput.addAll(followList.getFollows());
-        }
+        } while (cursor != null);
         return followsOutput;
     }
     
@@ -94,13 +88,29 @@ public class TwitchApi {
         return gameList.getGames().get(0);
     }
     
+    public List<Moderator> getMods(String userId) throws HystrixRuntimeException {
+        String cursor = null;
+        List<Moderator> modsOutput = new ArrayList<>();
+        
+        do {
+            ModeratorList moderatorList = twitchClient.getHelix().getModerators(
+                    Settings.getTwitchChannelAuthToken(),
+                    userId,
+                    null,
+                    cursor
+            ).execute();
+            cursor = moderatorList.getPagination().getCursor();
+            modsOutput.addAll(moderatorList.getModerators());
+        } while (cursor != null);
+        return modsOutput;
+    }
+    
     public Stream getStream() throws HystrixRuntimeException {
         StreamList streamList = twitchClient.getHelix().getStreams(
                 Settings.getTwitchChannelAuthToken(),
                 "",
                 "",
                 1,
-                null,
                 null,
                 null,
                 null,
@@ -112,26 +122,20 @@ public class TwitchApi {
     }
     
     public List<Subscription> getSubList(String userId) throws HystrixRuntimeException {
-        SubscriptionList subscriptionList = twitchClient.getHelix().getSubscriptions(
-                Settings.getTwitchChannelAuthToken(),
-                userId,
-                null,
-                null,
-                100
-        ).execute();
-    
-        List<Subscription> subscriptionsOutput = new ArrayList<>(subscriptionList.getSubscriptions());
-    
-        while (!subscriptionList.getSubscriptions().isEmpty()) {
-            subscriptionList = twitchClient.getHelix().getSubscriptions(
+        String cursor = null;
+        List<Subscription> subscriptionsOutput = new ArrayList<>();
+        
+        do {
+            SubscriptionList subscriptionList = twitchClient.getHelix().getSubscriptions(
                     Settings.getTwitchChannelAuthToken(),
                     userId,
-                    subscriptionList.getPagination().getCursor(),
+                    cursor,
                     null,
                     100
             ).execute();
+            cursor = subscriptionList.getPagination().getCursor();
             subscriptionsOutput.addAll(subscriptionList.getSubscriptions());
-        }
+        } while (cursor != null);
         return subscriptionsOutput;
     }
     
