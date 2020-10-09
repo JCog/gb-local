@@ -3,6 +3,13 @@ plugins {
     id 'java'
 }
 
+allprojects {
+    repositories {
+        jcenter()
+        maven { url "https://jitpack.io" }
+    }
+}
+
 group 'org.example'
 version '1.0-SNAPSHOT'
 
@@ -21,6 +28,7 @@ repositories {
 
 dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.12'
+    implementation group: 'com.github.JCog', name: 'gb-utils', version: '1.0'
     implementation group: 'org.slf4j', name: 'slf4j-nop', version: '1.7.25'
     implementation group: 'com.github.twitch4j', name: 'twitch4j', version: '1.1.2'
     implementation group: 'org.ini4j', name: 'ini4j', version: '0.5.4'

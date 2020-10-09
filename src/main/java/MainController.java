@@ -1,23 +1,22 @@
 import Functions.SubPointUpdater;
 import Util.ConsoleCommandListener;
 import Util.Settings;
-import Util.TwitchApi;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.helix.domain.User;
+import com.jcog.utils.TwitchApi;
 
 import java.util.NoSuchElementException;
 
 import static java.lang.System.out;
 
 public class MainController {
-    
-    private final TwitchClient
-            twitchClient = TwitchClientBuilder.builder()
-            .withEnableHelix(true)
-            .withClientId(Settings.getTwitchChannelClientId())
-            .build();
-    private final TwitchApi twitchApi = new TwitchApi(twitchClient);
+
+    private final TwitchApi twitchApi = new TwitchApi(
+            Settings.getTwitchStream(),
+            Settings.getTwitchChannelAuthToken(),
+            Settings.getTwitchChannelClientId()
+    );
     private final User streamerUser = twitchApi.getUserByUsername(Settings.getTwitchStream());
     private final SubPointUpdater subPointUpdater = new SubPointUpdater(twitchApi, streamerUser);
     
@@ -43,6 +42,6 @@ public class MainController {
     
     public void closeAll() {
         subPointUpdater.stop();
-        twitchClient.close();
+        twitchApi.close();
     }
 }
