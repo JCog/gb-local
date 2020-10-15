@@ -1,17 +1,31 @@
+import Functions.BitWarUpdater;
+import Functions.PubSub;
 import Functions.SubPointUpdater;
 import Util.ConsoleCommandListener;
 import Util.Settings;
-import com.github.twitch4j.TwitchClient;
-import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.helix.domain.User;
 import com.jcog.utils.TwitchApi;
+import com.jcog.utils.database.DbManager;
 
 import java.util.NoSuchElementException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static java.lang.System.out;
 
 public class MainController {
-
+    private static final String DB_NAME = "goombotio";
+    private static final int TIMER_THREAD_SIZE = 2;
+    
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(TIMER_THREAD_SIZE);
+    private final DbManager dbManager = new DbManager(
+            Settings.getDbHost(),
+            Settings.getDbPort(),
+            DB_NAME,
+            Settings.getDbUser(),
+            Settings.getDbPassword(),
+            Settings.hasWritePermission()
+    );
     private final TwitchApi twitchApi = new TwitchApi(
             Settings.getTwitchStream(),
             Settings.getTwitchChannelAuthToken(),
@@ -19,9 +33,16 @@ public class MainController {
     );
     private final User streamerUser = twitchApi.getUserByUsername(Settings.getTwitchStream());
     private final SubPointUpdater subPointUpdater = new SubPointUpdater(twitchApi, streamerUser);
+    private final BitWarUpdater bitWarUpdater = new BitWarUpdater(scheduler, dbManager);
     
     public synchronized void run() {
+        new PubSub(bitWarUpdater, streamerUser.getId(), Settings.getTwitchChannelAuthToken())
+                .listenForBits()
+                .listenForChannelPoints()
+                .listenForSubGifts();
+        
         subPointUpdater.start();
+        bitWarUpdater.startDbSync();
     
         out.println("gb-local is ready.");
     
@@ -42,6 +63,5 @@ public class MainController {
     
     public void closeAll() {
         subPointUpdater.stop();
-        twitchApi.close();
     }
 }
