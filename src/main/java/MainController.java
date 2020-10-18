@@ -34,13 +34,12 @@ public class MainController {
     private final User streamerUser = twitchApi.getUserByUsername(Settings.getTwitchStream());
     private final SubPointUpdater subPointUpdater = new SubPointUpdater(twitchApi, streamerUser);
     private final BitWarUpdater bitWarUpdater = new BitWarUpdater(scheduler, dbManager);
+    private final PubSub pubSub = (PubSub) new PubSub(bitWarUpdater, streamerUser.getId(), Settings.getTwitchChannelAuthToken())
+            .listenForBits()
+            .listenForChannelPoints()
+            .listenForSubGifts();
     
     public synchronized void run() {
-        new PubSub(bitWarUpdater, streamerUser.getId(), Settings.getTwitchChannelAuthToken())
-                .listenForBits()
-                .listenForChannelPoints()
-                .listenForSubGifts();
-        
         subPointUpdater.start();
         bitWarUpdater.startDbSync();
     
@@ -63,5 +62,6 @@ public class MainController {
     
     public void closeAll() {
         subPointUpdater.stop();
+        pubSub.close();
     }
 }
