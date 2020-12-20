@@ -6,7 +6,6 @@ import static java.lang.System.out;
 public class Main {
     public static void main(String[] args) {
         out.println("Starting...");
-        Settings.init();
         MainController mainBotController = new MainController();
         
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

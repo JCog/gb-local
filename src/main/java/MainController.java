@@ -17,24 +17,25 @@ public class MainController {
     private static final String DB_NAME = "goombotio";
     private static final int TIMER_THREAD_SIZE = 2;
     
+    private final Settings settings = new Settings();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(TIMER_THREAD_SIZE);
     private final DbManager dbManager = new DbManager(
-            Settings.getDbHost(),
-            Settings.getDbPort(),
+            settings.getDbHost(),
+            settings.getDbPort(),
             DB_NAME,
-            Settings.getDbUser(),
-            Settings.getDbPassword(),
-            Settings.hasWritePermission()
+            settings.getDbUser(),
+            settings.getDbPassword(),
+            settings.hasWritePermission()
     );
     private final TwitchApi twitchApi = new TwitchApi(
-            Settings.getTwitchStream(),
-            Settings.getTwitchChannelAuthToken(),
-            Settings.getTwitchChannelClientId()
+            settings.getTwitchStream(),
+            settings.getTwitchChannelAuthToken(),
+            settings.getTwitchChannelClientId()
     );
-    private final User streamerUser = twitchApi.getUserByUsername(Settings.getTwitchStream());
-    private final SubPointUpdater subPointUpdater = new SubPointUpdater(twitchApi, streamerUser);
+    private final User streamerUser = twitchApi.getUserByUsername(settings.getTwitchStream());
+    private final SubPointUpdater subPointUpdater = new SubPointUpdater(twitchApi, streamerUser, settings);
     private final BitWarUpdater bitWarUpdater = new BitWarUpdater(scheduler, dbManager);
-    private final PubSub pubSub = (PubSub) new PubSub(bitWarUpdater, streamerUser.getId(), Settings.getTwitchChannelAuthToken())
+    private final PubSub pubSub = (PubSub) new PubSub(bitWarUpdater, streamerUser.getId(), settings.getTwitchChannelAuthToken())
             .listenForBits()
             .listenForChannelPoints()
             .listenForSubGifts();

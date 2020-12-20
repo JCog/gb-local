@@ -21,17 +21,17 @@ public class SubPointUpdater {
     private static final int TIER_3_MULTIPLIER = 6;
     
     private final Timer timer = new Timer();
-    private final String displayFormat = Settings.getSubCountFormat();
-    private final int offset = Settings.getSubCountOffset();
     private final User streamerUser;
     private final TwitchApi twitchApi;
+    private final Settings settings;
     
     private int subPoints;
     
     //TBH this whole class is almost never exactly right, but that's only because Twitch's sub API sucks :/
-    public SubPointUpdater(TwitchApi twitchApi, User streamerUser) {
+    public SubPointUpdater(TwitchApi twitchApi, User streamerUser, Settings settings) {
         this.twitchApi = twitchApi;
         this.streamerUser = streamerUser;
+        this.settings = settings;
         subPoints = 0;
     }
     
@@ -80,14 +80,14 @@ public class SubPointUpdater {
             }
         }
         
-        subPoints = tier1 + (tier2 * TIER_2_MULTIPLIER) + (tier3 * TIER_3_MULTIPLIER) + offset;
+        subPoints = tier1 + (tier2 * TIER_2_MULTIPLIER) + (tier3 * TIER_3_MULTIPLIER) + settings.getSubCountOffset();
     }
     
     private void outputSubPointsFile() {
         FileWriter.writeToFile(
                 LOCAL_SUB_POINTS_FILE_LOCATION,
                 LOCAL_SUB_POINTS_FILENAME,
-                String.format(displayFormat, subPoints)
+                String.format(settings.getSubCountFormat(), subPoints)
         );
     }
 }
