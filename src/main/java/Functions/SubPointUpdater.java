@@ -18,6 +18,7 @@ public class SubPointUpdater {
     private static final String LOCAL_SUB_POINTS_FILENAME = "sub_points.txt";
     private static final String SUB_GOAL_COMMAND = "!subgoal";
     private static final int INTERVAL = 60 * 1000;
+    private static final int COMMAND_INTERVAL = 5;
     private static final int TIER_2_MULTIPLIER = 2;
     private static final int TIER_3_MULTIPLIER = 6;
     
@@ -27,7 +28,7 @@ public class SubPointUpdater {
     private final Settings settings;
     
     private int subPoints;
-    private boolean showingCommand;
+    private int showCommandCounter;
     
     //TBH this whole class is almost never exactly right, but that's only because Twitch's sub API sucks :/
     public SubPointUpdater(TwitchApi twitchApi, User streamerUser, Settings settings) {
@@ -35,7 +36,7 @@ public class SubPointUpdater {
         this.streamerUser = streamerUser;
         this.settings = settings;
         subPoints = 0;
-        showingCommand = false;
+        showCommandCounter = 0;
     }
     
     public void start() {
@@ -43,13 +44,14 @@ public class SubPointUpdater {
             @Override
             public void run() {
                 updateSubTierCounts();
-                if (showingCommand) { //TODO: make it a setting to control whether or not to show the sub goal command
+                if (showCommandCounter < COMMAND_INTERVAL) {
                     outputSubPointsFile();
+                    showCommandCounter++;
                 }
                 else {
                     outputSubGoalCommandToFile();
+                    showCommandCounter = 0;
                 }
-                showingCommand = !showingCommand;
             }
         }, 0, INTERVAL);
     }
