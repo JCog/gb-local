@@ -4,9 +4,12 @@ import org.ini4j.Wini;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 public class Settings {
     private static final String INI_FILENAME = "settings.ini";
+    private static final int REFRESH_RATE = 5; //minutes
     
     private static final String GENERAL_CAT_TAG = "general";
     private static final String DB_CAT_TAG = "database";
@@ -15,45 +18,47 @@ public class Settings {
     
     private final Wini ini = getIni();
     
+    private LocalDateTime lastRefreshed = LocalDateTime.now();
+    
     public boolean hasWritePermission() {
-        return ini.get(GENERAL_CAT_TAG, "writePermission", boolean.class);
+        return get(GENERAL_CAT_TAG, "writePermission", boolean.class);
     }
     
     public String getDbHost() {
-        return ini.get(DB_CAT_TAG, "host");
+        return get(DB_CAT_TAG, "host");
     }
     
     public int getDbPort() {
-        return ini.get(DB_CAT_TAG, "port", int.class);
+        return get(DB_CAT_TAG, "port", int.class);
     }
     
     public String getDbUser() {
-        return ini.get(DB_CAT_TAG, "user");
+        return get(DB_CAT_TAG, "user");
     }
     
     public String getDbPassword() {
-        return ini.get(DB_CAT_TAG, "password");
+        return get(DB_CAT_TAG, "password");
     }
     
     //streamer username in all lowercase
     public String getTwitchStream() {
-        return ini.get(TWITCH_CAT_TAG, "stream");
+        return get(TWITCH_CAT_TAG, "stream");
     }
     
     public String getTwitchChannelAuthToken() {
-        return ini.get(TWITCH_CAT_TAG, "channelAuthToken");
+        return get(TWITCH_CAT_TAG, "channelAuthToken");
     }
     
     public String getTwitchChannelClientId() {
-        return ini.get(TWITCH_CAT_TAG, "channelClientId");
+        return get(TWITCH_CAT_TAG, "channelClientId");
     }
     
     public String getSubCountFormat() {
-        return ini.get(SUB_COUNT_CAT_TAG, "format");
+        return get(SUB_COUNT_CAT_TAG, "format");
     }
     
     public int getSubCountOffset() {
-        return ini.get(SUB_COUNT_CAT_TAG, "offset", int.class);
+        return get(SUB_COUNT_CAT_TAG, "offset", int.class);
     }
     
     private Wini getIni() {
@@ -67,5 +72,29 @@ public class Settings {
             return null;
         }
         return ini;
+    }
+    
+    private void refreshIni() {
+        LocalDateTime now = LocalDateTime.now();
+        if (ChronoUnit.MINUTES.between(lastRefreshed, now) >= REFRESH_RATE) {
+            try {
+                if (ini != null) {
+                    ini.load();
+                    lastRefreshed = now;
+                }
+            } catch (IOException e) {
+                System.out.println("ERROR: unable to refresh ini");
+            }
+        }
+    }
+    
+    private String get(Object sectionName, Object optionName) {
+        refreshIni();
+        return ini.get(sectionName, optionName);
+    }
+    
+    private <T> T get(Object sectionName, Object optionName, Class<T> clazz) {
+        refreshIni();
+        return ini.get(sectionName, optionName, clazz);
     }
 }
